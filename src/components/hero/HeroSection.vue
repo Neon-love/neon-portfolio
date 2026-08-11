@@ -12,20 +12,30 @@
           @load="onImageLoad"
           @error="onImageLoad"
         />
-        <div class="anim-swipe" ref="swipeRefs" />
+        <div
+          class="anim-swipe"
+          :ref="el => { if (el) swipeRefs[i] = el }"
+        />
       </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, onBeforeUpdate } from 'vue'
 import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 const emit = defineEmits(['slices-revealed'])
 
 const heroImage = '/hero.jpg'
-const swipeRefs = ref([])
+const swipeRefs = []
+const triggers  = []
+
+// clear refs before each patch so stale nodes don't linger
+onBeforeUpdate(() => {
+  swipeRefs.length = 0
+})
 
 let revealed       = false
 let fallbackTimer  = null
@@ -36,8 +46,9 @@ function runReveal() {
   revealed = true
   clearTimeout(fallbackTimer)
 
-  gsap.to(swipeRefs.value, {
-    yPercent: 300,
+  // load animation — one shot, staggered random
+  gsap.to(swipeRefs, {
+    yPercent: 105,
     delay: 0.2,
     duration: 3,
     stagger: { from: 'random', each: 0.1 },
@@ -57,13 +68,15 @@ onMounted(() => {
 
 onUnmounted(() => {
   clearTimeout(fallbackTimer)
-  gsap.killTweensOf(swipeRefs.value)
+  triggers.forEach(t => t.kill())
+  gsap.killTweensOf(swipeRefs)
 })
 </script>
 
 <style scoped>
 .hero {
-  height: 400vh;
+  /* reduced — user sees name then quickly moves to HeroWords */
+  height: 320vh;
   position: relative;
 }
 
@@ -85,7 +98,7 @@ onUnmounted(() => {
   content: "";
   position: absolute;
   right: 0px;
-  background-color: #111111;
+  background-color: #0a0a0f;
   height: 100%;
   top: 0;
   width: 2.5px;
@@ -111,7 +124,7 @@ onUnmounted(() => {
 
 .anim-swipe {
   width: 100% !important;
-  background-color: #111111;
+  background-color: #0a0a0f;
   z-index: 2;
 }
 </style>
