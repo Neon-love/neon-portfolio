@@ -40,12 +40,17 @@
                   class="hwords__icon-item"
                 >
                   <div class="hwords__icon-wrap">
-                    <img
-                      v-if="tech.icon"
-                      :src="tech.icon"
-                      :alt="tech.name"
-                      class="hwords__icon-img"
-                    />
+                    <template v-if="tech.icon">
+                      <img
+                        :src="tech.icon"
+                        :alt="tech.name"
+                        class="hwords__icon-img"
+                        @error="e => { e.target.style.display='none'; e.target.parentElement.querySelector('.hwords__icon-placeholder').style.display='flex' }"
+                      />
+                      <span class="hwords__icon-placeholder" style="display:none">
+                        {{ tech.short || tech.name[0] }}
+                      </span>
+                    </template>
                     <i
                       v-else-if="tech.bxi"
                       :class="[tech.short, 'hwords__icon-bxi']"
@@ -108,7 +113,7 @@ const words = [
     label: 'ai skills',
     techs: [
       { name: 'Claude',     icon: 'https://cdn.simpleicons.org/anthropic/000000' },
-      { name: 'ChatGPT',    icon: 'https://cdn.simpleicons.org/openai/000000' },
+      { name: 'ChatGPT',    icon: 'https://cdn.simpleicons.org/chatgpt/000000' },
       { name: 'Gemini',     icon: 'https://cdn.simpleicons.org/googlegemini/000000' },
       { name: 'Ollama',     icon: 'https://cdn.simpleicons.org/ollama/000000' },
       { name: 'RAG',        icon: null, short: 'R' },

@@ -1,59 +1,45 @@
 <template>
-  <section class="projects">
-    <div class="projects__inner">
+  <section class="prs">
+    <div class="prs__inner">
 
-      <div class="projects__heading-wrap" ref="headerRef">
-        <div class="projects__heading-top">
-          <span class="projects__label">// selected work</span>
-          <span class="projects__count">03 projects</span>
+      <div class="prs__heading-row">
+        <div class="prs__heading-wrap" ref="headingRef">
+          <span class="prs__label">// selected work</span>
+          <h2 class="prs__heading">
+            <span class="prs__heading-clip"><span class="prs__heading-line">Things</span></span>
+            <span class="prs__heading-clip"><span class="prs__heading-line prs__heading-line--italic">I've built.</span></span>
+          </h2>
         </div>
-        <h2 class="projects__heading">
-          <span class="projects__heading-clip">
-            <span class="projects__heading-line">Things</span>
-          </span>
-          <span class="projects__heading-clip">
-            <span class="projects__heading-line projects__heading-line--italic">I've built.</span>
-          </span>
-        </h2>
-        <div class="projects__heading-rule" ref="ruleRef" />
+        <RouterLink to="/projects" class="prs__view-all" ref="viewAllRef">
+          <span class="prs__view-all-text">View all projects</span>
+          <span class="prs__view-all-arrow">↗</span>
+        </RouterLink>
       </div>
 
-      <div class="projects__list">
+      <div class="prs__grid" ref="gridRef">
         <div
           v-for="(project, i) in projects"
           :key="project.title"
-          class="projects__row"
-          :class="i % 2 === 0 ? '' : 'projects__row--reverse'"
-          :ref="el => { if (el) rowEls[i] = el }"
+          class="prs__card"
+          :ref="el => { if (el) cardEls[i] = el }"
+          :style="{ '--accent': project.accent }"
         >
-          <div class="projects__img-wrap">
-            <div class="projects__img-inner">
-              <img
-                :src="project.img"
-                :alt="project.title"
-                class="projects__img"
-                :ref="el => { if (el) imgEls[i] = el }"
-              />
-              <div class="projects__img-fallback" :style="{ background: project.fallback }" />
-            </div>
+          <div class="prs__card-img-wrap">
+            <img :src="project.img" :alt="project.title" class="prs__card-img" />
           </div>
-
-          <div class="projects__text">
-            <div class="projects__text-top">
-              <span class="projects__num">{{ String(i + 1).padStart(2, '0') }}</span>
-              <span class="projects__year">{{ project.year }}</span>
+          <div class="prs__card-body">
+            <div class="prs__card-top">
+              <span class="prs__card-num">{{ String(i + 1).padStart(2, '0') }}</span>
+              <span class="prs__card-category">{{ project.category }}</span>
             </div>
-            <h3 class="projects__title">{{ project.title }}</h3>
-            <p class="projects__desc">{{ project.desc }}</p>
-            <div class="projects__tags">
-              <span v-for="tag in project.tags" :key="tag" class="projects__tag">
-                {{ tag }}
-              </span>
+            <h3 class="prs__card-title">{{ project.title }}</h3>
+            <div class="prs__card-tags">
+              <span v-for="tag in project.tags" :key="tag" class="prs__card-tag">{{ tag }}</span>
             </div>
-            <div class="projects__cta">
-              <span class="projects__cta-text">View project</span>
-              <span class="projects__cta-arrow">↗</span>
-            </div>
+            <p class="prs__card-desc">{{ project.desc }}</p>
+            <a v-if="project.liveUrl" :href="project.liveUrl" target="_blank" class="prs__card-link">
+              Live Preview ↗
+            </a>
           </div>
         </div>
       </div>
@@ -63,317 +49,271 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, onBeforeUpdate } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { RouterLink } from 'vue-router'
+
+gsap.registerPlugin(ScrollTrigger)
 
 const projects = [
   {
-    title: 'KTPBA Broadcast System',
-    desc: 'Full live broadcast overlay system for national bowling. Animated sponsor sequences, real-time scoreboards, player profiles — engineered for live TV.',
-    tags: ['Vue.js', 'GSAP', 'Broadcast'],
-    year: '2025',
-    img: '/images/projects/ktpba.jpg',
-    fallback: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+    title: 'Salon de Belleza',
+    category: 'Hospitality',
+    tags: ['Vue', 'Express', 'MySQL'],
+    img: '/images/projects/salon.png',
+    accent: '#c26b8a',
+    liveUrl: 'https://salon-de-belleza-omega.vercel.app/',
+    desc: 'Website for a salon. Covers services, pricing, and booking.',
   },
   {
-    title: 'Noisy Kings Bowling App',
-    desc: 'Full league management app. Lane visualization, practice mode, live scoring and a Supabase + PostgreSQL backend deployed on Render.',
+    title: 'Bowlo',
+    category: 'Sports Tech',
     tags: ['React', 'FastAPI', 'Supabase'],
-    year: '2024',
-    img: '/images/projects/noisy-kings.jpg',
-    fallback: 'linear-gradient(135deg, #0f2027 0%, #2c5364 100%)',
+    img: '/images/projects/noisy-kings.png',
+    accent: '#e8963a',
+    liveUrl: 'https://bowling-app-mirror.vercel.app/',
+    desc: 'League management app for a local bowling club. Live scoring and player stats.',
   },
   {
-    title: 'Village Market PDA',
-    desc: 'Public display and advertising app powering screens across Village Market mall. Real-time content scheduling via Socket.IO.',
-    tags: ['Vue', 'Express', 'Socket.IO'],
-    year: '2024',
-    img: '/images/projects/pda.jpg',
-    fallback: 'linear-gradient(135deg, #1a0533 0%, #2d1b69 100%)',
+    title: 'Mechanico',
+    category: 'Systems',
+    tags: ['FastAPI', 'React Admin', 'MySQL'],
+    img: '/images/projects/mets.png',
+    accent: '#c0392b',
+    liveUrl: null,
+    desc: 'Fault tracking tool for a gaming floor. Real-time error logging and dashboard.',
   },
 ]
 
-const headerRef = ref(null)
-const ruleRef   = ref(null)
-const rowEls    = []
-const imgEls    = []
-const triggers  = []
-
-onBeforeUpdate(() => {
-  rowEls.length = 0
-  imgEls.length = 0
-})
+const headingRef = ref(null)
+const viewAllRef = ref(null)
+const gridRef    = ref(null)
+const cardEls    = []
+const triggers   = []
 
 onMounted(() => {
-  const lines = headerRef.value.querySelectorAll('.projects__heading-line')
-  const top   = headerRef.value.querySelector('.projects__heading-top')
+  const lines = headingRef.value.querySelectorAll('.prs__heading-line')
+  const label = headingRef.value.querySelector('.prs__label')
+  gsap.set([label, lines], { opacity: 0, y: 30 })
+  gsap.set(viewAllRef.value.$el, { opacity: 0, x: 20 })
+  gsap.set(cardEls, { opacity: 0, y: 60 })
 
-  gsap.set(top,   { opacity: 0, y: 16 })
-  gsap.set(lines, { y: '105%' })
-  gsap.set(ruleRef.value, { scaleX: 0, transformOrigin: 'left' })
+  triggers.push(ScrollTrigger.create({
+    trigger: headingRef.value,
+    start: 'top 80%',
+    onEnter: () => {
+      gsap.timeline()
+        .to(label, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' })
+        .to(lines, { opacity: 1, y: 0, duration: 0.8, stagger: 0.1, ease: 'power4.out' }, '-=0.2')
+        .to(viewAllRef.value.$el, { opacity: 1, x: 0, duration: 0.6, ease: 'power3.out' }, '-=0.4')
+    }
+  }))
 
-  triggers.push(
-    ScrollTrigger.create({
-      trigger: headerRef.value,
-      start: 'top 85%',
-      end: 'top 20%',
-      scrub: 1,
-      onUpdate: self => {
-        const p = self.progress
-        gsap.set(top,   { opacity: p, y: 16 * (1 - p) })
-        gsap.set(lines, { y: `${105 * (1 - p)}%` })
-        gsap.set(ruleRef.value, { scaleX: p, transformOrigin: 'left' })
-      }
-    })
-  )
-
-  rowEls.forEach((row, i) => {
-    const isReverse = i % 2 !== 0
-    const imgWrap   = row.querySelector('.projects__img-wrap')
-    const text      = row.querySelector('.projects__text')
-    const img       = imgEls[i]
-
-    // scrubbed — reverses naturally on scroll up
-    triggers.push(
-      ScrollTrigger.create({
-        trigger: row,
-        start: 'top 90%',
-        end: 'top 30%',
-        scrub: 1,
-        onUpdate: self => {
-          const p      = self.progress
-          const eased  = gsap.parseEase('power3.out')(p)
-          const xImg   = isReverse ? 40 * (1 - eased) : -40 * (1 - eased)
-          const xText  = isReverse ? -40 * (1 - eased) : 40 * (1 - eased)
-          gsap.set(imgWrap, { opacity: eased, x: xImg })
-          gsap.set(text,    { opacity: eased, x: xText })
-        }
-      })
-    )
-
-    row.addEventListener('mouseenter', () => {
-      gsap.to(img, { scale: 1.04, duration: 0.6, ease: 'power2.out' })
-    })
-    row.addEventListener('mouseleave', () => {
-      gsap.to(img, { scale: 1, duration: 0.6, ease: 'power2.out' })
-    })
-  })
+  triggers.push(ScrollTrigger.create({
+    trigger: gridRef.value,
+    start: 'top 75%',
+    onEnter: () => {
+      gsap.to(cardEls, { opacity: 1, y: 0, duration: 0.7, stagger: 0.15, ease: 'power3.out' })
+    }
+  }))
 })
 
-onUnmounted(() => { triggers.forEach(t => t.kill()) })
+onUnmounted(() => triggers.forEach(t => t.kill()))
 </script>
 
 <style scoped>
-.projects {
-  position: relative;
-  z-index: 5;
+.prs {
   background: #fafaf8;
-  padding: 8rem 0;
+  padding: 8rem 4vw 8rem;
 }
 
-.projects__inner {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 0 3rem;
-}
+.prs__inner { max-width: 1200px; margin: 0 auto; }
 
-.projects__heading-wrap { margin-bottom: 5rem; }
-
-.projects__heading-top {
+.prs__heading-row {
   display: flex;
+  align-items: flex-end;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
+  margin-bottom: 4rem;
+  gap: 2rem;
 }
 
-.projects__label {
+.prs__label {
+  display: block;
   font-family: 'DM Mono', monospace;
   font-size: 10px;
   letter-spacing: 0.28em;
   color: #999;
+  margin-bottom: 1rem;
 }
 
-.projects__count {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  color: #ccc;
-}
-
-.projects__heading {
+.prs__heading {
   display: flex;
   flex-direction: column;
-  margin: 0 0 2rem;
+  margin: 0;
 }
 
-.projects__heading-clip {
+.prs__heading-clip {
   display: block;
   overflow: hidden;
   line-height: 1;
 }
 
-.projects__heading-line {
+.prs__heading-line {
   display: block;
   font-family: 'Cormorant Garamond', serif;
   font-weight: 300;
-  font-size: clamp(3.5rem, 8vw, 7rem);
+  font-size: clamp(2.5rem, 6vw, 5.5rem);
   line-height: 0.95;
   color: #111;
   padding-bottom: 0.05em;
 }
 
-.projects__heading-line--italic {
+.prs__heading-line--italic {
   font-style: italic;
   color: #aaa;
-  padding-left: 2.5rem;
+  padding-left: 1.5rem;
 }
 
-.projects__heading-rule {
-  height: 1px;
-  background: #e0e0e0;
-}
-
-/* rows */
-.projects__list {
+.prs__view-all {
   display: flex;
-  flex-direction: column;
-  gap: 7rem;
-}
-
-.projects__row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 3.5rem;
   align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  flex-shrink: 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #111;
+  transition: gap 0.2s;
 }
 
-.projects__row--reverse {
-  direction: rtl;
-}
-.projects__row--reverse > * {
-  direction: ltr;
+.prs__view-all:hover { gap: 0.8rem; }
+
+.prs__view-all-text {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #111;
 }
 
-.projects__img-wrap {
-  width: 100%;
-  aspect-ratio: 16 / 9;
+.prs__view-all-arrow {
+  font-size: 0.9rem;
+  color: #111;
+}
+
+/* grid */
+.prs__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.prs__card {
+  background: #fff;
+  border-radius: 16px;
   overflow: hidden;
-  border-radius: 3px;
-  background: #ebebeb;
-  position: relative;
+  border: 1px solid #ebebeb;
+  transition: box-shadow 0.3s, transform 0.3s;
 }
 
-.projects__img-inner {
+.prs__card:hover {
+  box-shadow: 0 16px 48px -8px rgba(0,0,0,0.12);
+  transform: translateY(-4px);
+}
+
+.prs__card-img-wrap {
   width: 100%;
-  height: 100%;
+  aspect-ratio: 16 / 10;
   overflow: hidden;
+  background: #f2f2f0;
+  border-bottom: 3px solid var(--accent);
 }
 
-.projects__img {
+.prs__card-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
-  will-change: transform;
+  transition: transform 0.4s ease;
 }
 
-.projects__img-fallback {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-}
+.prs__card:hover .prs__card-img { transform: scale(1.04); }
 
-.projects__text {
+.prs__card-body {
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: 0.75rem;
 }
 
-.projects__text-top {
+.prs__card-top {
   display: flex;
   justify-content: space-between;
+  align-items: center;
 }
 
-.projects__num {
+.prs__card-num {
   font-family: 'DM Mono', monospace;
-  font-size: 10px;
+  font-size: 9px;
   letter-spacing: 0.2em;
   color: #ccc;
 }
 
-.projects__year {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.15em;
-  color: #ccc;
-}
-
-.projects__title {
-  font-family: 'Cormorant Garamond', serif;
-  font-weight: 400;
-  font-size: clamp(1.5rem, 2.5vw, 2.2rem);
-  color: #111;
-  margin: 0;
-  line-height: 1.1;
-}
-
-.projects__desc {
-  font-family: 'Inter Tight', sans-serif;
-  font-weight: 300;
-  font-size: 0.85rem;
-  line-height: 1.78;
-  color: #777;
-  margin: 0;
-}
-
-.projects__tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.projects__tag {
+.prs__card-category {
   font-family: 'DM Mono', monospace;
   font-size: 8px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: #aaa;
-  border: 1px solid #e0e0e0;
-  padding: 3px 10px;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 2px 7px;
   border-radius: 2px;
 }
 
-.projects__cta {
+.prs__card-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 1.6rem;
+  color: #111;
+  margin: 0;
+  line-height: 1;
+}
+
+.prs__card-tags {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  flex-wrap: wrap;
+  gap: 5px;
 }
 
-.projects__cta-text {
+.prs__card-tag {
   font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.2em;
+  font-size: 8px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #bbb;
-  border-bottom: 1px solid #e0e0e0;
-  padding-bottom: 1px;
-  transition: color 0.2s, border-color 0.2s;
+  color: #999;
+  border: 1px solid #ebebeb;
+  padding: 2px 8px;
+  border-radius: 20px;
 }
 
-.projects__cta-arrow {
-  font-size: 0.9rem;
-  color: #bbb;
-  transition: color 0.2s, transform 0.2s;
+.prs__card-desc {
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 300;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #666;
+  margin: 0;
 }
 
-.projects__row:hover .projects__cta-text {
-  color: #111;
-  border-color: #111;
+.prs__card-link {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-decoration: none;
+  margin-top: 0.25rem;
+  transition: opacity 0.2s;
 }
 
-.projects__row:hover .projects__cta-arrow {
-  color: #111;
-  transform: translate(3px, -3px);
-}
+.prs__card-link:hover { opacity: 0.7; }
 </style>

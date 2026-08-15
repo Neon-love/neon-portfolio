@@ -12,7 +12,7 @@
         <RouterLink to="/about" class="nav__link">About</RouterLink>
       </li>
       <li>
-        <span class="nav__link nav__link--disabled">Projects</span>
+        <RouterLink to="/projects" class="nav__link">Projects</RouterLink>
       </li>
       <li>
         <a href="#contact" class="nav__link" @click.prevent="scrollToContact">Contact</a>
@@ -24,26 +24,56 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { ScrollToPlugin } from 'gsap/ScrollToPlugin'
+
+gsap.registerPlugin(ScrollTrigger, ScrollToPlugin)
 
 const props = defineProps({
   smoother: { type: Object, default: null }
 })
 
 const route     = useRoute()
+const router    = useRouter()
 const navRef    = ref(null)
 const isLight   = ref(false)
 const isVisible = ref(false)
 const triggers  = []
 
 function scrollToContact() {
-  const el = document.getElementById('contact')
-  if (el && props.smoother) {
-    props.smoother.scrollTo(el, true, 'top top')
-  } else if (el) {
-    el.scrollIntoView({ behavior: 'smooth' })
+  if (route.path === '/') {
+    // already on home — just scroll to contact section
+    const el = document.getElementById('contact')
+    if (el) {
+      gsap.to(window, {
+        scrollTo: { y: el, offsetY: 0 },
+        duration: 1.2,
+        ease: 'power3.inOut'
+      })
+    } else {
+      // fallback if no id — scroll to bottom
+      gsap.to(window, {
+        scrollTo: { y: document.body.scrollHeight },
+        duration: 1.4,
+        ease: 'power3.inOut'
+      })
+    }
+  } else {
+    // on another route — navigate to home then scroll after arrival
+    router.push('/').then(() => {
+      setTimeout(() => {
+        const el = document.getElementById('contact')
+        if (el) {
+          gsap.to(window, {
+            scrollTo: { y: el, offsetY: 0 },
+            duration: 1.2,
+            ease: 'power3.inOut'
+          })
+        }
+      }, 400)
+    })
   }
 }
 

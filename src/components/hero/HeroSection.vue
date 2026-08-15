@@ -76,7 +76,7 @@ onUnmounted(() => {
 <style scoped>
 .hero {
   /* reduced — user sees name then quickly moves to HeroWords */
-  height: 320vh;
+  height: 100vh;
   position: relative;
 }
 

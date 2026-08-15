@@ -1,7 +1,7 @@
 <template>
-  <div id="wrapper" ref="wrapperRef">
+  <div id="wrapper">
 
-    <NavBar ref="navBarRef" :smoother="smoother" />
+    <NavBar ref="navBarRef" />
 
     <canvas class="particles-canvas" ref="particlesCanvasRef" />
 
@@ -9,19 +9,9 @@
     <div class="cursor-dot" ref="cursorDotRef" />
     <div class="hero__grain" />
 
-    <div class="hero__bg-text" ref="bgTextRef">
-      <div class="hero__name-wrap" ref="nameWrapRef">
-        <div class="hero__rule-wrap">
-          <div class="hero__rule" ref="ruleRef" />
-        </div>
-        <div class="hero__name-clip">
-          <h1 class="hero__name" ref="nameRef">Neon <span class="hero__name-brian">Brian</span></h1>
-        </div>
-      </div>
-    </div>
-
-    <div id="content" ref="contentRef">
+    <div id="content">
       <HeroSection @slices-revealed="onSlicesRevealed" />
+      <HeroPassage />
       <HeroWords />
       <ProjectsSection />
       <ContactSection />
@@ -34,27 +24,20 @@
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { ScrollSmoother } from 'gsap/ScrollSmoother'
 import HeroSection from '@/components/hero/HeroSection.vue'
 import HeroWords from '@/components/hero/HeroWords.vue'
+import HeroPassage from '@/components/hero/HeroPassage.vue'
 import ProjectsSection from '@/components/projects/ProjectsSection.vue'
 import ContactSection from '@/components/contact/ContactSection.vue'
 import NavBar from '@/components/shared/NavBar.vue'
 
-gsap.registerPlugin(ScrollTrigger, ScrollSmoother)
+gsap.registerPlugin(ScrollTrigger)
 
-const wrapperRef         = ref(null)
-const contentRef         = ref(null)
-const bgTextRef          = ref(null)
-const nameWrapRef        = ref(null)
-const nameRef            = ref(null)
-const ruleRef            = ref(null)
 const cursorRef          = ref(null)
 const cursorDotRef       = ref(null)
 const navBarRef          = ref(null)
 const particlesCanvasRef = ref(null)
 
-let smoother    = null
 let breatheAnim = null
 let animFrameId = null
 const triggers  = []
@@ -149,52 +132,35 @@ function onMouseMove(e) {
 function onNameEnter() { gsap.to(cursorRef.value, { scale: 2.5, duration: 0.3 }) }
 function onNameLeave() { gsap.to(cursorRef.value, { scale: 1,   duration: 0.3 }) }
 
-// ── slices revealed — name animates in, nav shows, NO auto-scroll ──
+// ── slices revealed — nav shows ──
 function onSlicesRevealed() {
-  gsap.fromTo(ruleRef.value,
-    { scaleX: 0 },
-    { scaleX: 1, duration: 0.8, ease: 'power3.out', transformOrigin: 'left' }
-  )
-
-  gsap.fromTo(nameRef.value,
-    { y: '110%' },
-    {
-      y: '0%',
-      duration: 1.1,
-      ease: 'power4.out',
-      delay: 0.2,
-      onComplete: () => {
-        breatheAnim = gsap.to(nameRef.value, {
-          scale: 1.004, duration: 3, ease: 'sine.inOut', yoyo: true, repeat: -1
-        })
-        navBarRef.value?.show()
-        // no auto-scroll — user scrolls naturally
-      }
-    }
-  )
+  navBarRef.value?.show()
 }
 
 onMounted(() => {
   document.body.classList.add('landing-active')
   initParticles()
-  gsap.set(nameRef.value, { y: '110%' })
 
   window.addEventListener('mousemove', onMouseMove)
-  nameRef.value?.addEventListener('mouseenter', onNameEnter)
-  nameRef.value?.addEventListener('mouseleave', onNameLeave)
 
   nextTick(() => {
-    smoother = ScrollSmoother.create({
-      wrapper: wrapperRef.value,
-      content: contentRef.value,
-      smooth: 2,
-      effects: true,
-      // normalizeScroll removed — it breaks per-element parallax stagger
-    })
-
-    // each slice gets a different random speed — this is what creates the stagger
-    smoother.effects('.hero__image-cont', {
-      speed: () => gsap.utils.random(0.55, 0.85, 0.05)
+    // slice parallax stagger — each slice gets a unique speed
+    const slices = document.querySelectorAll('.hero__image-cont')
+    slices.forEach((el, i) => {
+      const speed  = 0.55 + (i / Math.max(slices.length - 1, 1)) * 0.3
+      const travel = (1 - speed) * 100
+      triggers.push(
+        gsap.to(el, {
+          yPercent: -travel,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: '#content',
+            start: 'top top',
+            end: 'bottom top',
+            scrub: true,
+          }
+        }).scrollTrigger
+      )
     })
 
     // image scale + drift
@@ -203,23 +169,24 @@ onMounted(() => {
         scale: 1.5,
         xPercent: 20,
         scrollTrigger: {
-          trigger: '.hero',
+          trigger: '#content',
           start: 'top top',
           end: '+=1500px',
-          scrub: true
+          scrub: true,
         }
       }).scrollTrigger
     )
 
-    // bgText fades as HeroWords arrives
+    // passage fades as HeroWords arrives
     triggers.push(
       ScrollTrigger.create({
         trigger: '.hwords',
-        start: 'top 20%',
+        start: 'top 60%',
         end: 'top top',
         scrub: true,
         onUpdate: self => {
-          gsap.set(bgTextRef.value, { opacity: 1 - self.progress })
+          const el = document.querySelector('.passage-container')
+          if (el) gsap.set(el, { opacity: 1 - self.progress })
         }
       })
     )
@@ -230,11 +197,8 @@ onUnmounted(() => {
   document.body.classList.remove('landing-active')
   cancelAnimationFrame(animFrameId)
   window.removeEventListener('mousemove', onMouseMove)
-  nameRef.value?.removeEventListener('mouseenter', onNameEnter)
-  nameRef.value?.removeEventListener('mouseleave', onNameLeave)
   triggers.forEach(t => t.kill())
   breatheAnim?.kill()
-  if (smoother) smoother.kill()
 })
 </script>
 
@@ -252,12 +216,13 @@ body.landing-active {
 }
 
 #wrapper {
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
+  position: relative;
+  overflow-x: hidden;
+}
+
+#content {
+  position: relative;
+  z-index: 1;
 }
 
 .cursor {
@@ -319,79 +284,5 @@ body.landing-active {
   100%{ transform: translate(0,0); }
 }
 
-.hero__bg-text {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 0;
-  pointer-events: none;
-}
 
-.hero__name-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  pointer-events: none;
-}
-
-.hero__rule-wrap {
-  width: clamp(200px, 40vw, 400px);
-}
-
-.hero__rule {
-  height: 1px;
-  background: rgba(255,255,255,0.2);
-  transform-origin: left;
-  transform: scaleX(0);
-}
-
-.hero__name-clip {
-  overflow: hidden;
-  padding-bottom: 0.1em;
-}
-
-.hero__name {
-  font-family: 'Cormorant Garamond', serif;
-  font-weight: 300;
-  font-size: clamp(3.5rem, 10vw, 8.5rem);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #ffffff;
-  line-height: 1;
-  text-align: center;
-  margin: 0;
-  pointer-events: all;
-  display: block;
-}
-
-.hero__name-brian {
-  display: inline;
-  animation: brianGlow 4s ease-in-out infinite;
-  animation-delay: 1.5s;
-}
-
-@keyframes brianGlow {
-  0%, 60%, 100% {
-    color: #ffffff;
-    text-shadow: none;
-  }
-  70% {
-    color: #fff;
-    text-shadow: 0 0 10px #00f0ff, 0 0 30px #00f0ff88, 0 0 60px #00f0ff44;
-  }
-  80% {
-    color: #fff;
-    text-shadow: 0 0 6px #00f0ff, 0 0 20px #00f0ff66;
-  }
-  90% {
-    color: #fff;
-    text-shadow: 0 0 12px #00f0ff, 0 0 40px #00f0ffaa, 0 0 80px #00f0ff33;
-  }
-}
 </style>
