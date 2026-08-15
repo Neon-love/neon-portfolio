@@ -144,17 +144,21 @@ onMounted(() => {
   window.addEventListener('mousemove', onMouseMove)
 
   nextTick(() => {
-    // slice parallax stagger — each slice gets a unique speed
-    const slices = document.querySelectorAll('.hero__image-cont')
-    slices.forEach((el, i) => {
-      const speed  = 0.55 + (i / Math.max(slices.length - 1, 1)) * 0.3
-      const travel = (1 - speed) * 100
+    // staggered parallax — each slice's IMAGE moves at different speed
+    // containers are sticky so we move what's inside
+    const imgs = document.querySelectorAll('.hero__image-cont img')
+    imgs.forEach((img, i) => {
+      // alternate: odd slices go up faster, even go slower — creates stagger spread
+      const speeds = [0.3, 0.7, 0.2, 0.8, 0.4, 0.6]
+      const speed  = speeds[i] ?? 0.5
+      const travel = speed * 60  // max 60% travel difference
+
       triggers.push(
-        gsap.to(el, {
+        gsap.to(img, {
           yPercent: -travel,
           ease: 'none',
           scrollTrigger: {
-            trigger: '#content',
+            trigger: '.hero',
             start: 'top top',
             end: 'bottom top',
             scrub: true,
@@ -162,20 +166,6 @@ onMounted(() => {
         }).scrollTrigger
       )
     })
-
-    // image scale + drift
-    triggers.push(
-      gsap.to('.hero__image-cont > img', {
-        scale: 1.5,
-        xPercent: 20,
-        scrollTrigger: {
-          trigger: '#content',
-          start: 'top top',
-          end: '+=1500px',
-          scrub: true,
-        }
-      }).scrollTrigger
-    )
 
     // passage fades as HeroWords arrives
     triggers.push(
